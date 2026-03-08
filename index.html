@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подниматель настроения</title>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;1,500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cream: #fdf6f0;
+            --blush: #f2c4ce;
+            --rose: #d4788a;
+            --deep-rose: #a84f62;
+            --mauve: #c9a0a8;
+            --warm-white: #fffaf7;
+            --text-dark: #3a2229;
+            --text-mid: #7a5560;
+        }
+
+        body {
+            font-family: 'Unbounded', sans-serif;
+            background: var(--cream);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background blobs */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: drift 20s infinite ease-in-out;
+            z-index: 0;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--blush);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--mauve);
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -7s;
+        }
+
+        .blob-3 {
+            width: 250px;
+            height: 250px;
+            background: var(--rose);
+            top: 50%;
+            right: 10%;
+            animation-delay: -14s;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(20px, 10px) scale(1.05); }
+        }
+
+        /* Noise overlay */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            z-index: 1;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 15px;
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            color: var(--deep-rose);
+            text-align: center;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        /* Screen management */
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            position: relative;
+            z-index: 5;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Screen 1: Mode selection */
+        .mode-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .mode-card {
+            background: var(--warm-white);
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.15);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            z-index: 10;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(168, 79, 98, 0.25);
+            border-color: var(--blush);
+        }
+
+        .mode-emoji {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .mode-title {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        /* Screen 2: Filters */
+        .filters {
+            background: var(--warm-white);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+        }
+
+        .filter-section {
+            margin-bottom: 12px;
+        }
+
+        .filter-section h4 {
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 7px 14px;
+            border-radius: 18px;
+            background: var(--cream);
+            border: 2px solid var(--blush);
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-family: 'Unbounded', sans-serif;
+            position: relative;
+            z-index: 10;
+        }
+
+        .chip:hover {
+            border-color: var(--rose);
+        }
+
+        .chip.active {
+            background: var(--rose);
+            color: white;
+            border-color: var(--rose);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .nav-buttons .btn {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--rose), var(--deep-rose));
+            color: white;
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(168, 79, 98, 0.3);
+            position: relative;
+            z-index: 10;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 79, 98, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--mauve);
+        }
+
+        /* Screen 3: Card */
+        .card {
+            background: var(--warm-white);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(168, 79, 98, 0.15);
+            margin-bottom: 12px;
+            animation: cardEnter 0.5s ease-out;
+        }
+
+        @keyframes cardEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .card-image-container {
+            position: relative;
+            height: 50vh;
+            max-height: 350px;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            transition: transform 0.3s;
+        }
+
+        .card-image-centered {
+            object-position: center;
+        }
+
+        .card-image:hover {
+            transform: scale(1.02);
+        }
+
+        .card-gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(to top, rgba(58, 34, 41, 0.4), transparent);
+        }
+
+        .card-name {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Compliment */
+        .compliment {
+            background: var(--warm-white);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+            text-align: center;
+        }
+
+        .compliment-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .compliment::before,
+        .compliment::after {
+            content: '"';
+            font-size: 2rem;
+            color: var(--rose);
+        }
+
+        /* Standalone message */
+        .standalone {
+            background: var(--warm-white);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+            text-align: center;
+        }
+
+        .standalone-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        /* Back button */
+        .btn-back {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 15px;
+            background: var(--mauve);
+            color: white;
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+            align-self: flex-start;
+        }
+
+        .btn-back:hover {
+            background: var(--rose);
+        }
+
+        /* Progress indicator */
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--blush);
+        }
+
+        .dot.active {
+            background: var(--rose);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-mid);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Mobile optimization */
+        @media (max-height: 700px) {
+            h1 { font-size: 1.5rem; margin-bottom: 5px; }
+            .progress-dots { margin-bottom: 12px; }
+            .card-image-container { height: 45vh; max-height: 280px; }
+            .compliment { padding: 12px; margin-bottom: 10px; }
+            .compliment-text { font-size: 1rem; }
+            .btn { padding: 10px 20px; font-size: 0.95rem; }
+            .btn-back { padding: 6px 14px; font-size: 0.75rem; margin-bottom: 10px; }
+            .standalone { padding: 12px; margin-bottom: 10px; }
+            .card { margin-bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+    <div class="noise"></div>
+
+    <div class="container">
+        <h1>✨ Подниматель настроения</h1>
+
+        <!-- Progress dots -->
+        <div class="progress-dots">
+            <div class="dot active" id="dot1"></div>
+            <div class="dot" id="dot2"></div>
+            <div class="dot" id="dot3"></div>
+        </div>
+
+
+        <!-- Screen 1: Mode Selection -->
+        <div class="screen active" id="screen1">
+            <div class="mode-cards">
+                <div class="mode-card" onclick="selectMode('men')">
+                    <div class="mode-emoji">🔥</div>
+                    <div class="mode-title">Мужчины</div>
+                </div>
+                <div class="mode-card" onclick="selectMode('animals')">
+                    <div class="mode-emoji">🐾</div>
+                    <div class="mode-title">Животные</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Filters -->
+        <div class="screen" id="screen2">
+            <button class="btn-back" onclick="goToScreen(1)">← Назад</button>
+
+            <div class="standalone" id="standalone2">
+                <p class="standalone-text"></p>
+            </div>
+
+            <div class="filters" id="menFilters">
+                <div class="filter-section">
+                    <h4>💪 Вайб</h4>
+                    <div class="chips" id="vibeFilter"></div>
+                </div>
+                <div class="filter-section">
+                    <h4>👶 Возраст</h4>
+                    <div class="chips" id="ageFilter"></div>
+                </div>
+                <div class="filter-section">
+                    <h4>🧔 Борода</h4>
+                    <div class="chips" id="beardFilter"></div>
+                </div>
+                <div class="filter-section">
+                    <h4>🤓 Очки</h4>
+                    <div class="chips" id="glassesFilter"></div>
+                </div>
+                <div class="filter-section hidden" id="hotFilterSection">
+                    <h4>🔥 Горячий</h4>
+                    <div class="chips" id="hotFilter"></div>
+                </div>
+            </div>
+
+            <div class="filters hidden" id="animalFilters">
+                <div class="filter-section">
+                    <h4>🐾 Кто хочешь?</h4>
+                    <div class="chips" id="animalFilter"></div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="goToScreen(3)">Показать ✨</button>
+        </div>
+
+        <!-- Screen 3: Cards -->
+        <div class="screen" id="screen3">
+            <button class="btn-back" onclick="goToScreen(2)">← Фильтры</button>
+
+            <div class="standalone" id="standalone">
+                <p class="standalone-text"></p>
+            </div>
+
+            <div class="card hidden" id="card">
+                <div class="card-image-container">
+                    <img class="card-image" id="cardImage" src="" alt="">
+                    <div class="card-gradient"></div>
+                    <h2 class="card-name" id="cardName"></h2>
+                </div>
+            </div>
+
+            <div class="compliment hidden" id="compliment">
+                <p class="compliment-text" id="complimentText"></p>
+            </div>
+
+            <button class="btn" id="nextBtn" onclick="nextCard()">Следующий ✨</button>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentMode = 'men';
+        let currentScreen = 1;
+        let currentFilters = {
+            vibe: null,
+            age: null,
+            beard: null,
+            glasses: null,
+            hot: null,
+            animal: 'cat'
+        };
+        let currentCelebrity = null;
+        let filteredCelebrities = [];
+        let imageQueue = [];
+        let animalImageQueue = { key: null, images: [] };
+
+        // Shuffle array
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Data
+        let celebrities = {};
+        let namesMap = {};
+        let phrases = {};
+        let animalPhrases = {};
+        let animalImages = {};
+        let allImages = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadData();
+                initFilters();
+                showStandaloneMessage();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        async function loadData() {
+            try {
+                const [celebsResp, namesResp, phrasesResp, animalPhrasesResp, animalsResp] = await Promise.all([
+                    fetch('celebrities.json'),
+                    fetch('names-map.json'),
+                    fetch('phrases.json'),
+                    fetch('phrases_animals.json'),
+                    fetch('animals.json')
+                ]);
+
+                celebrities = await celebsResp.json();
+                namesMap = await namesResp.json();
+                phrases = await phrasesResp.json();
+                animalPhrases = await animalPhrasesResp.json();
+                animalImages = await animalsResp.json();
+
+                // Build image lists
+                Object.keys(celebrities).forEach(file => {
+                    const entry = celebrities[file];
+                    if (!allImages[entry.name]) {
+                        allImages[entry.name] = [];
+                    }
+                    allImages[entry.name].push({
+                        file: file,
+                        originalFile: entry.originalFile,
+                        tags: entry.tags,
+                        emoji: entry.emoji
+                    });
+                });
+
+                // Now update UI after data is loaded
+                showStandaloneMessage();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.querySelector('.standalone-text').textContent = 'Ошибка загрузки данных. Перезагрузите страницу.';
+            }
+        }
+
+        function showStandaloneMessage() {
+            const standaloneEl1 = document.getElementById('standalone');
+            const standaloneEl2 = document.getElementById('standalone2');
+            const cardEl = document.getElementById('card');
+            const complimentEl = document.getElementById('compliment');
+
+            if (standaloneEl1) standaloneEl1.classList.remove('hidden');
+            if (standaloneEl2) standaloneEl2.classList.remove('hidden');
+            cardEl.classList.add('hidden');
+            complimentEl.classList.add('hidden');
+
+            // Choose phrase type based on time of day
+            const hour = new Date().getHours();
+            let phraseType = 'silly';
+
+            // Show deep only at evening or night
+            if (hour >= 18 || hour < 6) {
+                phraseType = 'deep';
+            }
+
+            const phrases_list = phrases[phraseType];
+            if (phrases_list && phrases_list.length > 0) {
+                const randomPhrase = phrases_list[Math.floor(Math.random() * phrases_list.length)];
+                if (standaloneEl1) standaloneEl1.querySelector('.standalone-text').textContent = randomPhrase;
+                if (standaloneEl2) standaloneEl2.querySelector('.standalone-text').textContent = randomPhrase;
+            }
+        }
+
+        function goToScreen(screenNum) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+
+            // Show target screen
+            document.getElementById('screen' + screenNum).classList.add('active');
+            document.getElementById('dot' + screenNum).classList.add('active');
+
+            currentScreen = screenNum;
+
+            if (screenNum === 2) {
+                showStandaloneMessage();
+            } else if (screenNum === 3) {
+                showCard();
+            }
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+
+            if (mode === 'men') {
+                document.getElementById('menFilters').classList.remove('hidden');
+                document.getElementById('animalFilters').classList.add('hidden');
+            } else {
+                document.getElementById('menFilters').classList.add('hidden');
+                document.getElementById('animalFilters').classList.remove('hidden');
+            }
+
+            // Reset queues when switching modes
+            imageQueue = [];
+            animalImageQueue = { key: null, images: [] };
+
+            // Go to screen 2 after selecting mode
+            goToScreen(2);
+        }
+
+        function initFilters() {
+            // Vibe filter
+            const vibeFilter = document.getElementById('vibeFilter');
+            ['brutal', 'pretty', 'any'].forEach(v => {
+                const chip = createChip(v === 'brutal' ? 'Брутальный' : v === 'pretty' ? 'Смазливый' : 'Любой', 'vibe', v);
+                if (v === 'any') chip.classList.add('active');
+                vibeFilter.appendChild(chip);
+            });
+            currentFilters.vibe = 'any';
+
+            // Age filter
+            const ageFilter = document.getElementById('ageFilter');
+            ['young', 'mature', 'any'].forEach(a => {
+                const chip = createChip(a === 'young' ? 'Молодой' : a === 'mature' ? 'Взрослый' : 'Любой', 'age', a);
+                if (a === 'any') chip.classList.add('active');
+                ageFilter.appendChild(chip);
+            });
+            currentFilters.age = 'any';
+
+            // Beard filter
+            const beardFilter = document.getElementById('beardFilter');
+            ['yes', 'no', 'stubble', 'any'].forEach(b => {
+                const chip = createChip(
+                    b === 'yes' ? 'Да' :
+                    b === 'no' ? 'Нет' :
+                    b === 'stubble' ? 'Щетина' : 'Не имеет значения',
+                    'beard', b
+                );
+                if (b === 'any') chip.classList.add('active');
+                beardFilter.appendChild(chip);
+            });
+            currentFilters.beard = 'any';
+
+            // Glasses filter
+            const glassesFilter = document.getElementById('glassesFilter');
+            ['yes', 'no', 'any'].forEach(g => {
+                const chip = createChip(g === 'yes' ? 'Да' : g === 'no' ? 'Нет' : 'Не имеет значения', 'glasses', g);
+                if (g === 'any') chip.classList.add('active');
+                glassesFilter.appendChild(chip);
+            });
+            currentFilters.glasses = 'any';
+
+            // Hot filter (only at night)
+            const hour = new Date().getHours();
+            if (hour >= 22 || hour < 6) {
+                document.getElementById('hotFilterSection').classList.remove('hidden');
+                const hotFilter = document.getElementById('hotFilter');
+                ['yes', 'no', 'any'].forEach(h => {
+                    const chip = createChip(h === 'yes' ? 'Да' : h === 'no' ? 'Нет' : 'Не имеет значения', 'hot', h);
+                    if (h === 'any') chip.classList.add('active');
+                    hotFilter.appendChild(chip);
+                });
+                currentFilters.hot = 'any';
+            }
+
+            // Animal filter
+            const animalFilter = document.getElementById('animalFilter');
+            ['cat', 'dog', 'horse', 'parrot'].forEach(a => {
+                const chip = createChip(
+                    a === 'cat' ? '🐱 Кошки' :
+                    a === 'dog' ? '🐶 Собаки' :
+                    a === 'horse' ? '🐴 Лошади' : '🦜 Попугаи',
+                    'animal', a
+                );
+                if (a === 'cat') chip.classList.add('active');
+                animalFilter.appendChild(chip);
+            });
+            currentFilters.animal = 'cat';
+        }
+
+        function createChip(text, filter, value) {
+            const chip = document.createElement('button');
+            chip.className = 'chip';
+            chip.textContent = text;
+            chip.onclick = () => setFilter(filter, value);
+            return chip;
+        }
+
+        function setFilter(filter, value) {
+            currentFilters[filter] = value;
+
+            // Reset queues when filters change
+            imageQueue = [];
+            animalImageQueue = { key: null, images: [] };
+
+            // Update UI
+            const filterId = filter === 'animal' ? 'animalFilter' : filter + 'Filter';
+            const container = document.getElementById(filterId);
+            container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function getFilteredCelebrities() {
+            const filtered = [];
+
+            Object.entries(allImages).forEach(([name, images]) => {
+                images.forEach(img => {
+                    const tags = img.tags;
+
+                    // Check vibe filter
+                    if (currentFilters.vibe !== 'any') {
+                        if (tags.vibe === currentFilters.vibe) {
+                            if (Math.random() > 0.7) return;
+                        } else if (tags.vibe !== 'between') {
+                            return;
+                        }
+                    }
+
+                    // Check age filter
+                    if (currentFilters.age !== 'any') {
+                        if (tags.age === currentFilters.age) {
+                            if (Math.random() > 0.7) return;
+                        } else if (tags.age !== 'between') {
+                            return;
+                        }
+                    }
+
+                    // Check beard filter
+                    if (currentFilters.beard !== 'any' && tags.beard !== currentFilters.beard) {
+                        return;
+                    }
+
+                    // Check glasses filter
+                    if (currentFilters.glasses !== 'any' && tags.glasses !== currentFilters.glasses) {
+                        return;
+                    }
+
+                    // Check hot filter
+                    const hour = new Date().getHours();
+                    if (hour >= 22 || hour < 6) {
+                        // At night - use the hot filter setting
+                        if (currentFilters.hot === 'yes') {
+                            if (tags.hot !== 'yes' && Math.random() < 0.65) {
+                                return;
+                            }
+                        } else if (currentFilters.hot === 'no' && tags.hot === 'yes') {
+                            return;
+                        }
+                    } else {
+                        // During the day - exclude hot tagged celebrities
+                        if (tags.hot === 'yes') {
+                            return;
+                        }
+                    }
+
+                    filtered.push({ name, ...img });
+                });
+            });
+
+            return filtered;
+        }
+
+        function showCard() {
+            const standaloneEl = document.getElementById('standalone');
+            const cardEl = document.getElementById('card');
+            const complimentEl = document.getElementById('compliment');
+
+            if (currentMode === 'men') {
+                filteredCelebrities = getFilteredCelebrities();
+
+                if (filteredCelebrities.length === 0) {
+                    standaloneEl.classList.remove('hidden');
+                    cardEl.classList.add('hidden');
+                    complimentEl.classList.add('hidden');
+                    standaloneEl.querySelector('.standalone-text').textContent = getRandomPhrase('silly');
+                    return;
+                }
+
+                // Refill queue if empty
+                if (imageQueue.length === 0) {
+                    imageQueue = shuffle(filteredCelebrities);
+                }
+
+                currentCelebrity = imageQueue.pop();
+
+                cardEl.classList.remove('hidden');
+                complimentEl.classList.remove('hidden');
+                standaloneEl.classList.add('hidden');
+
+                document.getElementById('cardImage').src = `images/${currentCelebrity.originalFile}`;
+                document.getElementById('cardName').textContent = namesMap[currentCelebrity.name] || currentCelebrity.name;
+                document.getElementById('cardImage').classList.remove('card-image-centered');
+
+                // Compliment
+                const timeOfDay = getTimeOfDay();
+                const compliments = phrases.compliments[timeOfDay];
+                let compliment = compliments[Math.floor(Math.random() * compliments.length)];
+                compliment = compliment.replace('{name}', namesMap[currentCelebrity.name] || currentCelebrity.name);
+                document.getElementById('complimentText').textContent = compliment;
+
+            } else {
+                // Animals mode
+                cardEl.classList.remove('hidden');
+                complimentEl.classList.remove('hidden');
+                standaloneEl.classList.add('hidden');
+
+                const animalType = currentFilters.animal;
+                const images = animalImages[animalType] || [];
+
+                if (images.length === 0) {
+                    standaloneEl.classList.remove('hidden');
+                    cardEl.classList.add('hidden');
+                    complimentEl.classList.add('hidden');
+                    standaloneEl.querySelector('.standalone-text').textContent = 'Добавь картинки в ' + animalType + '.json';
+                    return;
+                }
+
+                // Refill queue if empty or animal type changed
+                const queueKey = animalType;
+                if (!animalImageQueue.key || animalImageQueue.key !== queueKey || animalImageQueue.images.length === 0) {
+                    animalImageQueue = {
+                        key: queueKey,
+                        images: shuffle(images)
+                    };
+                }
+
+                const randomImage = animalImageQueue.images.pop();
+
+                // Map animal type to actual folder name
+                const folderMap = {
+                    cat: 'kittens',
+                    dog: 'puppies',
+                    horse: 'horses',
+                    parrot: 'parrots'
+                };
+                const folder = folderMap[animalType] || animalType;
+
+                document.getElementById('cardImage').src = `animals/${folder}/${randomImage}`;
+                document.getElementById('cardName').textContent = '';
+                document.getElementById('cardImage').classList.add('card-image-centered');
+
+                // Animal compliment based on time of day
+                const timeOfDay = getTimeOfDay();
+                const animalCompliments = animalPhrases.animals[animalType]?.[timeOfDay] || [];
+                const compliment = animalCompliments[Math.floor(Math.random() * animalCompliments.length)] || 'Милое животное!';
+                document.getElementById('complimentText').textContent = compliment;
+            }
+        }
+
+        function getTimeOfDay() {
+            const hour = new Date().getHours();
+            if (hour >= 6 && hour < 12) return 'morning';
+            if (hour >= 12 && hour < 18) return 'afternoon';
+            if (hour >= 18 && hour < 22) return 'evening';
+            return 'night';
+        }
+
+        function getRandomPhrase(type) {
+            const phrases_list = phrases[type] || phrases.standalone;
+            return phrases_list[Math.floor(Math.random() * phrases_list.length)];
+        }
+
+        function nextCard() {
+            // Re-trigger animation
+            const card = document.getElementById('card');
+            card.style.animation = 'none';
+            card.offsetHeight; // Trigger reflow
+            card.style.animation = 'cardEnter 0.5s ease-out';
+
+            showCard();
+        }
+    </script>
+</body>
+</html>
