@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Залипалка - Tagger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;1,500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Unbounded', sans-serif;
+            background: #fdf6f0;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: #a84f62;
+            text-align: center;
+            margin-bottom: 5px;
+            font-style: italic;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7a5560;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Setup Section */
+        #setup-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+            text-align: center;
+        }
+
+        .setup-item {
+            margin-bottom: 20px;
+        }
+
+        .setup-item label {
+            display: block;
+            color: #3a2229;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .setup-item input[type="file"] {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border: 2px dashed #f2c4ce;
+            border-radius: 10px;
+            background: #fffaf7;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #d4788a, #a84f62);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(168, 79, 98, 0.3);
+        }
+
+        .btn-secondary {
+            background: #c9a0a8;
+        }
+
+        /* Tagging Section */
+        #tagging-section {
+            display: none;
+        }
+
+        .progress-bar {
+            background: #f2c4ce;
+            height: 6px;
+            border-radius: 3px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #d4788a, #a84f62);
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #7a5560;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 15px;
+            height: calc(100vh - 120px);
+        }
+
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .image-preview {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+            position: sticky;
+            top: 10px;
+            height: fit-content;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .image-preview img {
+            width: 100%;
+            max-height: 350px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .image-filename {
+            text-align: center;
+            color: #7a5560;
+            margin-top: 5px;
+            font-size: 0.7rem;
+            word-break: break-all;
+        }
+
+        .tags-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            align-content: start;
+        }
+
+        .tag-section {
+            margin-bottom: 0;
+        }
+
+        .tag-section h3 {
+            color: #3a2229;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .name-section {
+            grid-column: 1 / -1;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 15px;
+            background: #fffaf7;
+            border: 2px solid #f2c4ce;
+            color: #7a5560;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            font-family: 'Unbounded', sans-serif;
+        }
+
+        .chip:hover {
+            border-color: #d4788a;
+            background: #fff0f3;
+        }
+
+        .chip.active {
+            background: #d4788a;
+            color: white;
+            border-color: #d4788a;
+        }
+
+        .name-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 4px;
+            padding: 5px;
+            background: #fffaf7;
+            border-radius: 10px;
+        }
+
+        .name-btn {
+            padding: 6px 4px;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #f2c4ce;
+            color: #3a2229;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.65rem;
+            font-family: 'Unbounded', sans-serif;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-height: 32px;
+            line-height: 1.1;
+        }
+
+        .name-btn:hover {
+            border-color: #d4788a;
+            background: #fff0f3;
+            transform: scale(1.02);
+        }
+
+        .name-btn.active {
+            background: #a84f62;
+            color: white;
+            border-color: #a84f62;
+            transform: scale(1.05);
+        }
+
+        .selected-emoji {
+            text-align: center;
+            font-size: 2rem;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fffaf7;
+            border-radius: 8px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            font-size: 0.85rem;
+        }
+
+        .counter {
+            text-align: center;
+            color: #7a5560;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .export-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
+            display: none;
+            text-align: center;
+        }
+
+        .export-section h3 {
+            color: #a84f62;
+            margin-bottom: 15px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            color: #c9a0a8;
+            font-size: 0.7rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Celebrity Tagger</h1>
+        <p class="subtitle">Тегай картинки, экспортируй данные, переименовывай красиво</p>
+
+        <!-- Setup Section -->
+        <div id="setup-section">
+            <div class="setup-item">
+                <label>📁 Загрузи картинки</label>
+                <input type="file" id="fileInput" multiple accept="image/*">
+                <p style="color: #7a5560; font-size: 0.75rem; margin-top: 3px;">Выбери все картинки сразу</p>
+            </div>
+
+            <button class="btn" onclick="startTagging()">Начать тегать 🎯</button>
+        </div>
+
+        <!-- Tagging Section -->
+        <div id="tagging-section">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">0 / 0 отмечено</p>
+
+            <div class="main-content">
+                <div class="image-preview">
+                    <img id="currentImage" src="" alt="Celebrity">
+                    <p class="image-filename" id="imageFilename"></p>
+
+                    <div class="selected-emoji" id="emojiPreview"></div>
+
+                    <div class="counter">
+                        <span id="currentIndex">1</span> из <span id="totalImages">0</span>
+                    </div>
+
+                    <div class="navigation">
+                        <button class="btn btn-secondary" onclick="prevImage()">← Назад</button>
+                        <button class="btn" onclick="nextImage()">Вперёд →</button>
+                    </div>
+
+                    <p class="keyboard-hint">Подсказка: ← → для навигации</p>
+                </div>
+
+                <div class="tags-panel">
+                    <!-- Имя -->
+                    <div class="tag-section name-section">
+                        <h3>👤 Кто это?</h3>
+                        <div class="name-grid" id="nameGrid"></div>
+                    </div>
+
+                    <!-- Вайб -->
+                    <div class="tag-section">
+                        <h3>💪 Вайб</h3>
+                        <div class="chips">
+                            <button class="chip" data-tag="vibe" data-value="brutal">Брутальный</button>
+                            <button class="chip" data-tag="vibe" data-value="pretty">Смазливый</button>
+                            <button class="chip" data-tag="vibe" data-value="between">Между</button>
+                        </div>
+                    </div>
+
+                    <!-- Борода -->
+                    <div class="tag-section">
+                        <h3>🧔 Борода</h3>
+                        <div class="chips">
+                            <button class="chip" data-tag="beard" data-value="yes">Да</button>
+                            <button class="chip" data-tag="beard" data-value="no">Нет</button>
+                            <button class="chip" data-tag="beard" data-value="stubble">Щетина</button>
+                        </div>
+                    </div>
+
+                    <!-- Очки -->
+                    <div class="tag-section">
+                        <h3>🤓</h3>
+                        <div class="chips">
+                            <button class="chip" id="glassesButton" data-tag="glasses" data-value="yes">🤓 Glasses</button>
+                        </div>
+                    </div>
+
+                    <!-- Возраст -->
+                    <div class="tag-section">
+                        <h3>👶 Возраст</h3>
+                        <div class="chips">
+                            <button class="chip" data-tag="age" data-value="mature">Взрослый</button>
+                            <button class="chip" data-tag="age" data-value="young">Молодой</button>
+                            <button class="chip" data-tag="age" data-value="between">Между</button>
+                        </div>
+                    </div>
+
+                    <!-- Hot -->
+                    <div class="tag-section">
+                        <h3>🔥</h3>
+                        <div class="chips">
+                            <button class="chip" id="hotButton" data-tag="hot" data-value="yes">🔥 Hot</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="export-section" id="exportSection">
+                <h3>🎉 Всё готово! Экспортируй данные:</h3>
+                <div class="export-buttons">
+                    <button class="btn" onclick="exportJSON()">Скачать JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Celebrity data
+        const celebrities = [
+            { name: "Andrew Scott", emoji: "😈" },
+            { name: "Barry Keoghan", emoji: "🎪" },
+            { name: "Ben Barnes", emoji: "👸" },
+            { name: "Benedict Cumberbatch", emoji: "🧠" },
+            { name: "Christian Bale", emoji: "🦇" },
+            { name: "Chris Evans", emoji: "🇺🇸" },
+            { name: "Chris Hemsworth", emoji: "⚡" },
+            { name: "Cillian Murphy", emoji: "👁️" },
+            { name: "Colin Firth", emoji: "🎩" },
+            { name: "Colin Jost", emoji: "📝" },
+            { name: "Dev Patel", emoji: "💫" },
+            { name: "Henry Cavill", emoji: "🦁" },
+            { name: "Hugh Grant", emoji: "🇬🇧" },
+            { name: "James McAvoy", emoji: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+            { name: "Jacob Elordi", emoji: "🌊" },
+            { name: "Jonathan Bailey", emoji: "🎭" },
+            { name: "Jude Law", emoji: "🎩" },
+            { name: "Keanu Reeves", emoji: "🥋" },
+            { name: "Lee Pace", emoji: "🌟" },
+            { name: "Matthew McConaughey", emoji: "🌴" },
+            { name: "Michael Fassbender", emoji: "🎬" },
+            { name: "Nicholas Galitzine", emoji: "🎸" },
+            { name: "Nikolaj Coster-Waldau", emoji: "⚔️" },
+            { name: "Oscar Isaac", emoji: "✨" },
+            { name: "Orlando Bloom", emoji: "🧝" },
+            { name: "Regé-Jean Page", emoji: "👑" },
+            { name: "Richard Madden", emoji: "🔥" },
+            { name: "Ryan Gosling", emoji: "🕴️" },
+            { name: "Timothée Chalamet", emoji: "🦋" },
+            { name: "Tom Hardy", emoji: "🐺" },
+            { name: "Tom Hiddleston", emoji: "🔱" },
+            { name: "Viggo Mortensen", emoji: "🗡️" }
+        ];
+
+        // State
+        let images = [];
+        let currentIdx = 0;
+        let taggedData = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            populateNameButtons();
+            setupChipListeners();
+        });
+
+        function populateNameButtons() {
+            const grid = document.getElementById('nameGrid');
+
+            celebrities.forEach(celeb => {
+                const btn = document.createElement('button');
+                btn.className = 'name-btn';
+                btn.dataset.name = celeb.name;
+                btn.dataset.emoji = celeb.emoji;
+                btn.textContent = celeb.name;
+                btn.onclick = () => selectName(celeb.name, celeb.emoji);
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectName(name, emoji) {
+            // Remove active from all
+            document.querySelectorAll('.name-btn').forEach(b => b.classList.remove('active'));
+
+            // Add active to selected
+            const btn = document.querySelector(`.name-btn[data-name="${name}"]`);
+            if (btn) btn.classList.add('active');
+
+            // Show emoji
+            document.getElementById('emojiPreview').textContent = emoji;
+
+            saveCurrentTags();
+        }
+
+        function setupChipListeners() {
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const tag = chip.dataset.tag;
+                    const value = chip.dataset.value;
+
+                    // Special handling for toggle buttons
+                    if (tag === 'hot' || tag === 'glasses') {
+                        chip.classList.toggle('active');
+                        saveCurrentTags();
+                        return;
+                    }
+
+                    // Remove active from siblings with same tag
+                    chip.parentElement.querySelectorAll('.chip').forEach(c => {
+                        if (c.dataset.tag === tag) c.classList.remove('active');
+                    });
+
+                    // Activate current
+                    chip.classList.add('active');
+
+                    saveCurrentTags();
+                });
+            });
+        }
+
+        function startTagging() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                alert('Пожалуйста, выбери хотя бы одну картинку!');
+                return;
+            }
+
+            images = Array.from(fileInput.files);
+            currentIdx = 0;
+
+            // Initialize tagged data
+            images.forEach(img => {
+                taggedData[img.name] = {
+                    originalName: img.name,
+                    tags: {}
+                };
+            });
+
+            document.getElementById('setup-section').style.display = 'none';
+            document.getElementById('tagging-section').style.display = 'block';
+            document.getElementById('totalImages').textContent = images.length;
+
+            showCurrentImage();
+        }
+
+        function showCurrentImage() {
+            const img = images[currentIdx];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                document.getElementById('currentImage').src = e.target.result;
+                document.getElementById('imageFilename').textContent = img.name;
+            };
+
+            reader.readAsDataURL(img);
+            document.getElementById('currentIndex').textContent = currentIdx + 1;
+
+            loadCurrentTags();
+            updateProgress();
+        }
+
+        function loadCurrentTags() {
+            const data = taggedData[images[currentIdx].name];
+
+            // Reset all
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.name-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('emojiPreview').textContent = '';
+
+            // Load name
+            if (data.name) {
+                const btn = document.querySelector(`.name-btn[data-name="${data.name}"]`);
+                if (btn) btn.classList.add('active');
+                document.getElementById('emojiPreview').textContent = data.emoji || '';
+            }
+
+            // Load chips
+            if (data.tags) {
+                Object.entries(data.tags).forEach(([tag, value]) => {
+                    if (tag === 'hot') {
+                        const hotBtn = document.getElementById('hotButton');
+                        if (hotBtn && value === 'yes') hotBtn.classList.add('active');
+                    } else if (tag === 'glasses') {
+                        const glassesBtn = document.getElementById('glassesButton');
+                        if (glassesBtn && value === 'yes') glassesBtn.classList.add('active');
+                    } else {
+                        const chip = document.querySelector(`.chip[data-tag="${tag}"][data-value="${value}"]`);
+                        if (chip) chip.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function saveCurrentTags() {
+            const img = images[currentIdx];
+
+            // Save name
+            const activeNameBtn = document.querySelector('.name-btn.active');
+            if (activeNameBtn) {
+                taggedData[img.name].name = activeNameBtn.dataset.name;
+                taggedData[img.name].emoji = activeNameBtn.dataset.emoji;
+            }
+
+            // Save chips
+            taggedData[img.name].tags = {};
+            document.querySelectorAll('.chip').forEach(chip => {
+                const tag = chip.dataset.tag;
+                const value = chip.dataset.value;
+
+                // Toggle buttons: save 'yes' if active, 'no' otherwise
+                if (tag === 'hot' || tag === 'glasses') {
+                    taggedData[img.name].tags[tag] = chip.classList.contains('active') ? 'yes' : 'no';
+                } else if (chip.classList.contains('active')) {
+                    taggedData[img.name].tags[tag] = value;
+                }
+            });
+
+            updateProgress();
+        }
+
+        function nextImage() {
+            saveCurrentTags();
+            if (currentIdx < images.length - 1) {
+                currentIdx++;
+                showCurrentImage();
+            } else {
+                document.getElementById('exportSection').style.display = 'block';
+                alert('🎉 Все картинки отмечены! Экспортируй данные внизу.');
+            }
+        }
+
+        function prevImage() {
+            saveCurrentTags();
+            if (currentIdx > 0) {
+                currentIdx--;
+                showCurrentImage();
+            }
+        }
+
+        function updateProgress() {
+            const tagged = Object.values(taggedData).filter(d => d.name).length;
+            const total = images.length;
+            const percent = (tagged / total) * 100;
+
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = `${tagged} / ${total} отмечено`;
+        }
+
+        function exportJSON() {
+            const exportData = {};
+
+            Object.entries(taggedData).forEach(([origName, data]) => {
+                if (!data.name) return;
+
+                const ext = origName.split('.').pop();
+                const slugName = data.name.toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-|-$/g, '');
+                const newFileName = `${slugName}.${ext}`;
+
+                exportData[newFileName] = {
+                    name: data.name,
+                    emoji: data.emoji,
+                    originalFile: origName,
+                    tags: data.tags
+                };
+            });
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'celebrities.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('tagging-section').style.display === 'none') return;
+
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+        });
+    </script>
+</body>
+</html>
