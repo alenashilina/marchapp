@@ -550,6 +550,9 @@
         let filteredCelebrities = [];
         let imageQueue = [];
         let animalImageQueue = { key: null, images: [] };
+        let complimentQueue = [];
+        let animalComplimentQueue = {};
+        let lastComplimentTimeOfDay = '';
 
         // Shuffle array
         function shuffle(array) {
@@ -678,6 +681,8 @@
             // Reset queues when switching modes
             imageQueue = [];
             animalImageQueue = { key: null, images: [] };
+            complimentQueue = [];
+            animalComplimentQueue = {};
 
             // Go to screen 2 after selecting mode
             goToScreen(2);
@@ -868,8 +873,19 @@
 
                 // Compliment
                 const timeOfDay = getTimeOfDay();
-                const compliments = phrases.compliments[timeOfDay];
-                let compliment = compliments[Math.floor(Math.random() * compliments.length)];
+
+                // Refill compliment queue if time period changed
+                if (lastComplimentTimeOfDay !== timeOfDay) {
+                    complimentQueue = [];
+                    lastComplimentTimeOfDay = timeOfDay;
+                }
+
+                // Refill queue if empty
+                if (complimentQueue.length === 0) {
+                    complimentQueue = shuffle(phrases.compliments[timeOfDay]);
+                }
+
+                let compliment = complimentQueue.pop();
                 compliment = compliment.replace('{name}', namesMap[currentCelebrity.name] || currentCelebrity.name);
                 document.getElementById('complimentText').textContent = compliment;
 
@@ -916,8 +932,15 @@
 
                 // Animal compliment based on time of day
                 const timeOfDay = getTimeOfDay();
-                const animalCompliments = animalPhrases.animals[animalType]?.[timeOfDay] || [];
-                const compliment = animalCompliments[Math.floor(Math.random() * animalCompliments.length)] || 'Милое животное!';
+                const complimentKey = animalType + '_' + timeOfDay;
+
+                // Refill queue if empty or animal type/time changed
+                if (!animalComplimentQueue[complimentKey] || animalComplimentQueue[complimentKey].length === 0) {
+                    const animalCompliments = animalPhrases.animals[animalType]?.[timeOfDay] || [];
+                    animalComplimentQueue[complimentKey] = shuffle(animalCompliments);
+                }
+
+                const compliment = animalComplimentQueue[complimentKey].pop() || 'Милое животное!';
                 document.getElementById('complimentText').textContent = compliment;
             }
         }
