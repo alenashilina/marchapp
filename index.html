@@ -95,7 +95,6 @@
             position: relative;
             z-index: 2;
             min-height: 100vh;
-            height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -235,6 +234,7 @@
             position: relative;
             z-index: 10;
             display: inline-block;
+            flex-shrink: 0;
         }
 
         .btn:hover {
@@ -252,23 +252,15 @@
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 8px 30px rgba(168, 79, 98, 0.15);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             animation: cardEnter 0.5s ease-out;
             display: flex;
             flex-direction: column;
-            flex: 1 1 0;
-            min-height: 0;
-        }
-
-        .card:not(.hidden) {
-            flex-grow: 1;
         }
 
         .card-image-wrapper {
-            flex: 1 1 0;
             display: flex;
             flex-direction: column;
-            min-height: 0;
         }
 
         @keyframes cardEnter {
@@ -284,10 +276,19 @@
 
         .card-image-container {
             position: relative;
-            flex: 1 1 0;
-            min-height: 200px;
             width: 100%;
+            max-height: calc(100vh - 280px);
             overflow: hidden;
+            display: block;
+        }
+
+        .card-image {
+            width: 100%;
+            height: auto;
+            max-height: calc(100vh - 280px);
+            object-fit: cover;
+            object-position: center top;
+            display: block;
         }
 
         .card-image {
@@ -330,9 +331,10 @@
             background: var(--warm-white);
             border-radius: 15px;
             padding: 15px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
             text-align: center;
+            flex-shrink: 0;
         }
 
         .compliment-text {
@@ -355,9 +357,10 @@
             background: var(--warm-white);
             border-radius: 15px;
             padding: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             box-shadow: 0 4px 20px rgba(168, 79, 98, 0.1);
             text-align: center;
+            flex-shrink: 0;
         }
 
         .standalone-text {
@@ -379,8 +382,9 @@
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             align-self: flex-start;
+            flex-shrink: 0;
         }
 
         .btn-back:hover {
@@ -419,10 +423,10 @@
 
         /* Mobile optimization */
         @media (max-height: 700px) {
-            .container { height: auto; min-height: 100vh; }
             h1 { font-size: 1.5rem; margin-bottom: 5px; }
             .progress-dots { margin-bottom: 12px; }
-            .card-image-container { min-height: 180px; }
+            .card-image-container { max-height: calc(100vh - 240px); }
+            .card-image { max-height: calc(100vh - 240px); }
             .compliment { padding: 12px; margin-bottom: 10px; }
             .compliment-text { font-size: 1rem; }
             .btn { padding: 10px 20px; font-size: 0.95rem; }
